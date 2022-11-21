@@ -27,6 +27,7 @@ frz prodotto_f(frz, frz);
 frz prodotto_scal_f(frz, int);
 frz divisione_f(frz, frz);
 int confronta_f(frz, frz); // -1 "a" piu grande, 1 "b" piu grande
+frz estrai_f(char *);
 void stampa_f(frz, const char *);
 
 // MATRICI
@@ -180,6 +181,18 @@ int confronta_f(frz a, frz b) {
   
 }
 
+frz estrai_f(char *s) {
+  int i, frz_index = -1, a, b = 1;
+  for (i = 0; s[i] != '\0'; i++)
+    if (s[i] == '/') frz_index = i;
+
+  a = atoi(s);
+  if (frz_index != -1)
+    b = atoi(s + frz_index + 1);
+
+  return frazione(a, b);
+}
+
 void stampa_f(frz f, const char *a) {
   if (f.den == 1) {
     printf("%d%s", f.num, a);
@@ -199,18 +212,18 @@ int matrici_menu() {
     
     printf("\n\nMATRICI\n\n");
     if (!m.righe) {
-      printf("1) Nuova Matrice");
-      printf("0) Indietro");
+      printf("1) Nuova Matrice\n");
+      printf("0) Indietro\n");
       scelta = ask_int(0, 1);
     } else {
       stampa_m(m, "\n\n");
-      printf("1) Nuova Matrice");
-      printf("2) Somma");
-      printf("3) Prodotto");
-      printf("4) Riduci a scala");
-      printf("5) Rango");
-      printf("6) Inversa");
-      printf("0) Indietro");
+      printf("1) Nuova Matrice\n");
+      printf("2) Somma\n");
+      printf("3) Prodotto\n");
+      printf("4) Riduci a scala\n");
+      printf("5) Rango\n");
+      printf("6) Inversa\n");
+      printf("0) Indietro\n");
       scelta = ask_int(0, 6);
     }
 
@@ -218,12 +231,12 @@ int matrici_menu() {
       case 1:
         m = richiedi_matrice();
         break;
-      case 2:
+      case 4:
         printf("\n\nMatrice ridotta a scala:\n");
         stampa_m(scala_m(m), "\n\n");
         ask_int(0, 0);
         break;
-      case 3:
+      case 5:
         printf("\nRango della Matrice: %d\n\n", rango_m(m));
         ask_int(0, 0);
         break;
@@ -259,9 +272,9 @@ mat richiedi_matrice() {
     fflush(stdin);
     printf("Inserisci elementi della riga %d [%d valori]: ", r+1, m.colonne);
     for (c = 0; c < m.colonne; c++) {
-      int v;
-      scanf("%d", &v);
-      m.mat[r][c] = frazione(v, 1);
+      char s[10];
+      scanf("%s", s);
+      m.mat[r][c] = estrai_f(s);
     }
   }
   printf("\n");
