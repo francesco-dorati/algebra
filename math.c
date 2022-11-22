@@ -46,14 +46,23 @@ void stampa_m(mat, const char *);
 
 /*
 TODO
-  - leggi frazioni da richiedi matrice (leggi stringa)
+  - workspace con varaibili 
+  - salvate in un file
+  - possibilità di cambiare/eliminare workspace
+
+MATRICI
   - determinante
   - inversa di matrice
   - salva matrici risultato
-  
-  - sistemi
-    - equazioni come stringhe
-    - trovare matrice
+
+FUNZIONI LINEARI (?)
+salvate come matrici e vettori
+  - stampa sistema lista di stringhe
+  - crea sistema da matrice / stringhe
+  - ker e imm
+  - cabio di base
+  - polinomio caratteristico
+  - diagonalizzata
 
 */
 
@@ -206,39 +215,92 @@ void stampa_f(frz f, const char *a) {
 /* MATRICI */
 int matrici_menu() {
   int scelta;
-  mat m = {{}, 0, 0};
+  mat m[2] = {{{}, 0, 0}, {{}, 0, 0}}, tmp, scal;
 
   while (1) {
-    
     printf("\n\nMATRICI\n\n");
-    if (!m.righe) {
+    printf("A:\n");
+    m[0].righe ? stampa_m(m[0], "\n\n") : printf("Non ancora definita.\n\n");
+    printf("B:\n");
+    m[1].righe ? stampa_m(m[1], "\n\n") : printf("Non ancora definita.\n\n");
+    
+    if (!m[0].righe && !m[1].righe) {
       printf("1) Nuova Matrice\n");
       printf("0) Indietro\n");
       scelta = ask_int(0, 1);
     } else {
-      stampa_m(m, "\n\n");
       printf("1) Nuova Matrice\n");
-      printf("2) Somma\n");
-      printf("3) Prodotto\n");
-      printf("4) Riduci a scala\n");
-      printf("5) Rango\n");
-      printf("6) Inversa\n");
+      printf("2) Operazioni\n");
+      printf("3) Riduci a scala\n");
+      printf("4) Rango\n");
+      printf("5) Inversa\n");
       printf("0) Indietro\n");
       scelta = ask_int(0, 6);
     }
 
     switch (scelta) {
       case 1:
-        m = richiedi_matrice();
+        tmp = richiedi_matrice();
+        printf("\nMatrice inserita:\n");
+        stampa_m(tmp, "\n\n");
+        printf("Dove vuoi salvarla?\n");
+        printf("1) A %s\n", m[0].righe ? "(sovrascrivi)" : "");
+        printf("2) B %s\n", m[1].righe ? "(sovrascrivi)" : "");
+        printf("0) Annulla\n");
+        switch (ask_int(0, 2)) {
+          case 1:
+            m[0] = tmp;
+            break;
+          case 2:
+            m[1] = tmp;
+            break;
+        }
         break;
-      case 4:
-        printf("\n\nMatrice ridotta a scala:\n");
-        stampa_m(scala_m(m), "\n\n");
-        ask_int(0, 0);
+      case 3:
+        printf("\n\nQuale matrice vuoi ridurre a scala?\n");
+        printf("1) A %s\n", m[0].righe ? "" : "[non definita]");
+        printf("2) B %s\n", m[1].righe ? "" : "[non definita]");
+        printf("0) Indietro\n");
+
+        scelta = ask_int(0, 2);
+        switch (scelta) {
+          case 1:
+            if (!m[0].righe) {
+              printf("\nMatrice non definita.\n");
+
+            } else {
+              printf("\nMatrice A ridotta a scala:\n");
+              scal = scala_m(m[0]);
+              stampa_m(scal, "\n\n");
+            }
+            break;
+          case 2:
+            if (!m[1].righe) 
+              printf("\nMatrice non definita.\n");
+            else {
+              printf("\nMatrice B ridotta a scala:\n");
+              scal = scala_m(m[1]);
+              stampa_m(scal, "\n\n");
+            }
+            break;
+        }
+        if (scelta == 1 || scelta == 2) {
+          printf("1) Salva in A %s\n", m[0].righe ? "(sovrascrivi)" : "");
+          printf("2) Salva in B %s\n", m[1].righe ? "(sovrascrivi)" : "");
+          printf("0) Non salvare.\n");
+          switch (ask_int(0, 2)) {
+          case 1:
+            m[0] = scal;
+            break;
+          case 2:
+            m[1] = scal;
+            break;
+          }
+        }
         break;
       case 5:
-        printf("\nRango della Matrice: %d\n\n", rango_m(m));
-        ask_int(0, 0);
+        // printf("\nRango della Matrice: %d\n\n", rango_m(a));
+        // ask_int(0, 0);
         break;
       case 0:
         return 0;
@@ -386,6 +448,14 @@ int rango_m(mat m) {
 
   return pivot;
 }
+
+// int determinante_m(mat m) {
+//   int det = 0, i;
+//   // CONTROLLO matrice quadrata
+//   for (i = 0; i < m.righe; i++) {
+//     det += m.mat[0][i] * c[i][j] = (i+j)%2 ? (1) : (-1)  
+//   }
+// } 
 
 void stampa_m(mat m, const char *a) {
   int c, r;
