@@ -37,7 +37,7 @@ mat prodotto_m(mat, mat);
 mat prodotto_scal_m(mat, frz);
 mat scala_m(mat);
 int rango_m(mat);
-int determinante_m(mat);
+frz determinante_m(mat);
 mat inversa_m(mat);
 void stampa_m(mat, const char *);
 // void stampa_matrice(mat);
@@ -301,6 +301,9 @@ int matrici_menu() {
       case 5:
         // printf("\nRango della Matrice: %d\n\n", rango_m(a));
         // ask_int(0, 0);
+        printf("\nDeterminante: ");
+        stampa_f(determinante_m(m[0]), "\n\n");
+        ask_int(0, 0);
         break;
       case 0:
         return 0;
@@ -449,13 +452,38 @@ int rango_m(mat m) {
   return pivot;
 }
 
-// int determinante_m(mat m) {
-//   int det = 0, i;
-//   // CONTROLLO matrice quadrata
-//   for (i = 0; i < m.righe; i++) {
-//     det += m.mat[0][i] * c[i][j] = (i+j)%2 ? (1) : (-1)  
-//   }
-// } 
+frz determinante_m(mat m) {
+  frz det = frazione(0, 1);
+  int i, r, c;
+
+  if (m.righe != m.colonne) 
+    return frazione(0, 0);
+
+  if (m.righe == 1) 
+    return m.mat[0][0];
+  
+  for (i = 0; i < m.righe; i++) {
+    mat d = m;
+    d.righe--;
+    d.colonne--;
+    for (c = i; c < d.colonne; c++)
+      for (r = 0; r < d.colonne; r++)
+        d.mat[r][c] = d.mat[r][c+1];
+    
+    det = somma_f(
+      det, 
+      prodotto_scal_f(
+        prodotto_f(
+          m.mat[m.righe-1][i], 
+          determinante_m(d)
+        ), 
+        ((m.righe+i)%2 ? -1 : 1) // segno
+      ) 
+    );
+  }
+
+  return det;
+}
 
 void stampa_m(mat m, const char *a) {
   int c, r;
