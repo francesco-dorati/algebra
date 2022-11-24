@@ -35,6 +35,7 @@ mat richiedi_matrice();
 mat somma_m(mat, mat);
 mat prodotto_m(mat, mat);
 mat prodotto_scal_m(mat, frz);
+mat trasposta_m(mat);
 mat scala_m(mat);
 int rango_m(mat);
 frz determinante_m(mat);
@@ -50,8 +51,10 @@ TODO
   - salvate in un file
   - possibilità di cambiare/eliminare workspace
 
+Numeri Reali
+  - frz = rad(2)/rad(5)
+
 MATRICI
-  - determinante
   - inversa di matrice
   - salva matrici risultato
 
@@ -301,8 +304,8 @@ int matrici_menu() {
       case 5:
         // printf("\nRango della Matrice: %d\n\n", rango_m(a));
         // ask_int(0, 0);
-        printf("\nDeterminante: ");
-        stampa_f(determinante_m(m[0]), "\n\n");
+        printf("\nTrasposta: \n");
+        stampa_m(trasposta_m(m[0]), "\n\n");
         ask_int(0, 0);
         break;
       case 0:
@@ -388,6 +391,17 @@ mat prodotto_scal_m(mat m, frz f) {
     for (c = 0; c < m.colonne; c++)
       m.mat[r][c] = prodotto_f(m.mat[r][c], f);
   return m;
+}
+
+mat trasposta_m(mat m) {
+  int rt, ct;
+  mat tr = {{}, m.colonne, m.righe};
+
+  for (rt = 0; rt < tr.righe; rt++)
+    for (ct = 0; ct < tr.colonne; ct++)
+      tr.mat[rt][ct] = m.mat[ct][rt];
+
+  return tr;
 }
 
 mat scala_m(mat m) {
