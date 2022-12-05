@@ -36,6 +36,9 @@ mat somma_m(mat, mat);
 mat prodotto_m(mat, mat);
 mat prodotto_scal_m(mat, frz);
 mat trasposta_m(mat);
+mat scambia_righe_m(mat, int, int);
+mat moltiplica_riga(mat, int, frz);
+mat differenza_righe_m(mat, int, frz, int);
 mat scala_m(mat);
 int rango_m(mat);
 frz determinante_m(mat);
@@ -236,13 +239,16 @@ int matrici_menu() {
       printf("2) Operazioni\n");
       printf("3) Riduci a scala\n");
       printf("4) Rango\n");
-      printf("5) Inversa\n");
+      printf("5) Trasposta\n");
+      printf("6) Determinante\n");
+      printf("7) Inversa\n");
       printf("0) Indietro\n");
-      scelta = ask_int(0, 6);
+      scelta = ask_int(0, 7);
     }
 
     switch (scelta) {
       case 1:
+        // nuova matrice
         tmp = richiedi_matrice();
         printf("\nMatrice inserita:\n");
         stampa_m(tmp, "\n\n");
@@ -259,7 +265,19 @@ int matrici_menu() {
             break;
         }
         break;
+      case 2:
+        // operazioni
+        printf("\n\n1) A + B\n");
+        printf("2) A - B\n");
+        printf("3) A * B\n");
+        printf("0) Indietro\n");
+        switch(ask_int(0, 3)) {
+          case 1:
+            break;
+        }
+        break;
       case 3:
+        // scala
         printf("\n\nQuale matrice vuoi ridurre a scala?\n");
         printf("1) A %s\n", m[0].righe ? "" : "[non definita]");
         printf("2) B %s\n", m[1].righe ? "" : "[non definita]");
@@ -301,11 +319,29 @@ int matrici_menu() {
           }
         }
         break;
+
+      case 4:
+        // rango
+        printf("\n\nRango A: %d\n\n", rango_m(m[0]));
+        break;
       case 5:
+        // trasposta
         // printf("\nRango della Matrice: %d\n\n", rango_m(a));
         // ask_int(0, 0);
-        printf("\nTrasposta: \n");
+        printf("\n\nTrasposta A: \n");
         stampa_m(trasposta_m(m[0]), "\n\n");
+        ask_int(0, 0);
+        break;
+      case 6:
+        // determinante
+        printf("\n\nDeterminante A: ");
+        stampa_f(determinante_m(m[0]), "\n\n");
+        ask_int(0, 0);
+        break;
+      case 7:
+        // inversa
+        printf("\n\nInversa A: \n");
+        stampa_m(inversa_m(m[0]), "\n\n");
         ask_int(0, 0);
         break;
       case 0:
@@ -404,28 +440,51 @@ mat trasposta_m(mat m) {
   return tr;
 }
 
+mat scambia_righe_m(mat m, int r1, int r2) {
+  frz tmp_swap;
+  int c;
+  for (c = 0; c < m.colonne; c++) {
+    tmp_swap = m.mat[r1][c];
+    m.mat[r1][c] = m.mat[r2][c];
+    m.mat[r2][c] = tmp_swap;
+  }
+  return m;
+}
+
+mat moltiplica_riga(mat m, int r, frz coeff) {
+  int c;
+
+  for (c = 0; c < m.colonne; c++)
+    m.mat[r][c] = prodotto_f(coeff, m.mat[r][c]);
+
+  return m;
+}
+
+mat differenza_righe_m(mat m, int r1, frz coeff, int r2) {
+  int c;
+
+  for (c = 0; c < m.colonne; c++)
+    m.mat[r1][c] = differenza_f(m.mat[r1][c], prodotto_f(coeff, m.mat[r2][c])); 
+
+  return m;
+}
+
 mat scala_m(mat m) {
   int r, c, ic = 0, ir = 0;
-  frz tmp_swap, coeff;
+  frz coeff;
 
   while (ic < m.colonne && ir < m.righe) {
     // se il primo elemento della prima riga è nullo e non è l'ultima riga
     if (!m.mat[ir][ic].num && ir < m.righe - 1) {
       // ricerca la prima riga che ha il primo elemento non nullo
+      r = ir;
       for (c = ic; c < m.colonne && !m.mat[r][c].num; c++) {
         for (r = ir; r < m.righe && !m.mat[r][c].num; r++) {}
         if (!m.mat[r][c].num) ic++;
       }
 
       // scambia la prima riga con la prima non nulla
-      for (c = ic; c < m.colonne; c++) {
-        tmp_swap = m.mat[ir][c];
-        m.mat[ir][c] = m.mat[r][c];
-        m.mat[r][c] = tmp_swap;
-      }
-
-      // passaggio
-      // printf("r%d <-> r%d;\n", ir, r);
+      m = scambia_righe_m(m, ir, r);
     }
 
     // riduci le righe sotto la prima
@@ -437,13 +496,7 @@ mat scala_m(mat m) {
       coeff = divisione_f(m.mat[r][ic], m.mat[ir][ic]);
 
       // riduci tutti gli elementi della riga
-      for (c = ic; c < m.colonne; c++) 
-        m.mat[r][c] = differenza_f(m.mat[r][c], prodotto_f(coeff, m.mat[ir][c]));
-
-      // passaggio
-      // printf("r%d %c", r, coeff.n>0?'+':'\0');
-      // stampa_frazione(coeff);
-      // printf(" r%d;\n", ir);
+      m = differenza_righe_m(m, r, coeff, ir);
     }
 
     ir++;
@@ -498,6 +551,80 @@ frz determinante_m(mat m) {
 
   return det;
 }
+
+mat inversa_m(mat m) {
+  int r, c, ic = 0, ir = 0;
+  frz coeff;
+  mat inv = {{}, 0, 0};
+
+  if (m.righe != m.colonne) return inv;
+  if (confronta_f(determinante_m(m), frazione(0, 1)) == 0) return inv; // determinante != 0
+
+  // inv = identita
+  inv.righe = m.righe;
+  inv.colonne = m.colonne;
+  for (r = 0; r < inv.righe; r++)
+    for (c = 0; c < inv.colonne; c++)
+      inv.mat[r][c] = (r == c) ? frazione(1, 1) : frazione(0, 1); // 1 nella diagonale, 0 nel resto
+  
+  // riduci totalmente a scala m e applica le stesse operazioni a inv
+  while (ic+1 < m.colonne && ir+1 < m.righe) {
+    // 1 - se il primo elemento della prima riga è nullo e non è l'ultima riga
+    if (!m.mat[ir][ic].num && ir < m.righe - 1) {
+      // ricerca la prima riga che ha il primo elemento non nullo
+      r = ir;
+      for (c = ic; c < m.colonne && !m.mat[r][c].num; c++) {
+        for (r = ir; r < m.righe && !m.mat[r][c].num; r++) {}
+        if (!m.mat[r][c].num) ic++; // se tutta la riga è 0 vai a prossima colonna
+      }
+
+      // scambia la prima riga con la prima non nulla 
+      m = scambia_righe_m(m, ir, r);
+      inv = scambia_righe_m(inv, ir, r);
+    }
+
+    // 2 - riduci le righe sotto la prima
+    for (r = ir+1; r < m.righe; r++) {
+      // se il primo elemento è nullo passa a quello dopo
+      if (!m.mat[r][ic].num) continue;
+
+      // determina il coefficente
+      coeff = divisione_f(m.mat[r][ic], m.mat[ir][ic]);
+
+      // riduci tutti gli elementi della riga
+      m = differenza_righe_m(m, r, coeff, ir);
+      inv = differenza_righe_m(inv, r, coeff, ir);
+    }
+    ir++;
+    ic++;
+  }
+
+  // riparti al contrario
+  while (ir >= 0 && ic >= 0) {
+    // 1 - rendi l'elemento uguale a 1
+    coeff = inversa_f(m.mat[ir][ic]);
+    m = moltiplica_riga(m, ir, coeff);
+    inv = moltiplica_riga(inv, ir, coeff);
+
+    // 2 - riduci la riga sopra
+    for (r = ir-1; r >= 0; r--) {
+      // se l'elemento è nullo passa a quello dopo
+      if (!m.mat[r][ic].num) continue;
+
+      // determina il coefficente
+      coeff = divisione_f(m.mat[r][ic], m.mat[ir][ic]);
+
+      // riduci tutti gli elementi della riga
+      m = differenza_righe_m(m, r, coeff, ir);
+      inv = differenza_righe_m(inv, r, coeff, ir); 
+    }
+    ir--;
+    ic--;
+  }
+
+  return inv;
+}
+
 
 void stampa_m(mat m, const char *a) {
   int c, r;
